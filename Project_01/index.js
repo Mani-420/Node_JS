@@ -2,13 +2,18 @@
 const express = require("express");
 const fs = require("fs");
 const users = require("./MOCK_DATA.json");
-const { json } = require("stream/consumers");
-const { error } = require("console");
+const { sign } = require("crypto");
 const app = express();
 const PORT = 8000;
 
-// MiddleWare
+// MiddleWares
 app.use(express.urlencoded({extended: false}));
+
+app.use((req, res, next) => {
+    console.log("Hello, This is your Middleware 1.");
+    // return res.json({msg: "Hello middle 1."});
+    next();
+});
 
 // Routes
 app.get('/users', (req, res) => {
@@ -47,7 +52,7 @@ app
             return res.json({status: "Success", id: users.length + 1});
         });
         // TODO: Create new user 
-        return res.json({status: "pending"});
+        // return res.json({status: "pending"});
     })
     .patch((req, res) => {
         // TODO: Edit a user 
