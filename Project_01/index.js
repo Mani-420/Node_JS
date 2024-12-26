@@ -1,7 +1,13 @@
 const express = require("express");
+const fs = require("fs");
 const users = require("./MOCK_DATA.json");
+const { json } = require("stream/consumers");
+const { error } = require("console");
 const app = express();
 const PORT = 8000;
+
+// MiddleWare
+app.use(express.urlencoded({extended: false}));
 
 // Routes
 app.get('/users', (req, res) => {
@@ -18,6 +24,14 @@ app.get('/api/users', (req, res) => {
     return res.json(users);
 });
 
+app.post("/api/users", (req, res) => {
+    const body = req.body;
+    users.push({ ...body, id: users.length + 1});
+    fs.writeFile('./Project_01/MOCK_DATA.json', JSON.stringify(users), (err, data) => {
+        return res.json({status: "Success", id: users.length + 1});
+    });
+});
+
 app
     .route('/api/users/:id')
     .get((req, res) => {
@@ -26,6 +40,11 @@ app
         return res.json(user);
     })
     .post((req, res) => {
+        const body = req.body;
+        users.push({ ...body, id: users.length + 1});
+        fs.writeFile('./MOCK_DATA.json', JSON.stringify(users), (err, res) => {
+            return res.json({status: "Success", id: users.length + 1});
+        });
         // TODO: Create new user 
         return res.json({status: "pending"});
     })
