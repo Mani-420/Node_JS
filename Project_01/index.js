@@ -27,6 +27,7 @@ app.get('/users', (req, res) => {
 
 // Rest API 
 app.get('/api/users', (req, res) => {
+    res.setHeader("myName", "Mani Tahir");
     return res.json(users);
 });
 
