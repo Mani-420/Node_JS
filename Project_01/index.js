@@ -1,10 +1,39 @@
 // Main File
 const express = require("express");
 const fs = require("fs");
+const mongoose = require("mongoose");
 const users = require("./MOCK_DATA.json");
-const { sign } = require("crypto");
+const { type } = require("os");
 const app = express();
 const PORT = 8000;
+
+// Schema 
+const userSchema = new mongoose.Schema({
+    firstName: {
+        type: String,
+        required: true,
+    },
+    lastName: {
+        type: String,
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    jobTitle: {
+        type: String,
+    },
+    gender: {
+        type: String,
+    },
+});
+const User = mongoose.model('user', userSchema);
+
+// Connection 
+mongoose.connect("mongodb://localhost:27017/youtube-app-1")
+.then(() => console.log("MongoDB connected."))
+.catch((err) => console.log("MongoDB Error: ", err));
 
 // MiddleWares
 app.use(express.urlencoded({extended: false}));
