@@ -2,7 +2,7 @@
 const express = require("express");
 const fs = require("fs");
 const mongoose = require("mongoose");
-const users = require("./MOCK_DATA.json");
+// const users = require("./MOCK_DATA.json");
 const { type } = require("os");
 const app = express();
 const PORT = 8000;
@@ -31,9 +31,10 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('user', userSchema);
 
 // Connection 
-mongoose.connect("mongodb://localhost:27017/youtube-app-1")
-.then(() => console.log("MongoDB connected."))
-.catch((err) => console.log("MongoDB Error: ", err));
+mongoose   
+    .connect("mongodb://127.0.0.1:27017/youtube-app-1")
+    .then(() => console.log("MongoDB connected."))
+    .catch((err) => console.log("MongoDB Error: ", err));
 
 // MiddleWares
 app.use(express.urlencoded({extended: false}));
@@ -45,55 +46,81 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.get('/users', (req, res) => {
+app.get('/users', async (req, res) => {
+    const allDbUsers = await User.find({});
     const html = `
     <ul>
-        ${users.map((user) =>  `<li>${user.first_name}<li>`).join("")}
+        ${allDbUsers.map((user) =>  `<li>${user.firstName} - ${user.email} <li>`).join("")}
     <ul>
     `;
     res.send(html);
 });
 
 // Rest API 
-app.get('/api/users', (req, res) => {
-    res.setHeader("myName", "Mani Tahir");
-    return res.json(users);
+app.get('/api/users', async (req, res) => {
+    const allDbUsers = await User.find({});
+    return res.json(allDbUsers);
 });
 
-app.post("/api/users", (req, res) => {
+app.post("/api/users", async (req, res) => {
     const body = req.body;
-    users.push({ ...body, id: users.length + 1});
-    fs.writeFile('./Project_01/MOCK_DATA.json', JSON.stringify(users), (err, data) => {
-        return res.json({status: "Success", id: users.length + 1});
+    if (
+        !body ||
+        !body.first_name ||
+        !body.last_name ||
+        !body.email ||
+        !body.gender ||
+        !body.job_title
+    ){
+        return res.status(400).json({msg: "All fields are required."});
+    }
+    const creation = await User.create({
+        firstName: body.first_name,
+        lastName: body.last_name,
+        email: body.email,
+        gender: body.gender,
+        jobTitle: body.job_title,
     });
+
+    console.log(creation);
+    return res.status(201).json({msg: "success"});
 });
 
 app
     .route('/api/users/:id')
-    .get((req, res) => {
-        const id = Number(req.params.id);
-        const user = users.find((user) => user.id == id);
+    .get(async (req, res) => {
+        const user = await User.findById(req.params.id);
         return res.json(user);
     })
-    .post((req, res) => {
+    .post(async(req, res) => {
         const body = req.body;
-        users.push({ ...body, id: users.length + 1});
-        fs.writeFile('./MOCK_DATA.json', JSON.stringify(users), (err, res) => {
-            return res.json({status: "Success", id: users.length + 1});
+        if (
+            !body ||
+            !body.first_name ||
+            !body.last_name ||
+            !body.email ||
+            !body.gender ||
+            !body.job_title
+        ){
+            return res.status(400).json({msg: "All fields are required."});
+        }
+        const creation = await User.create({
+            firstName: body.first_name,
+            lastName: body.last_name,
+            email: body.email,
+            gender: body.gender,
+            jobTitle: body.job_title,
         });
-        // TODO: Create new user 
-        // return res.json({status: "pending"});
+        console.log(creation);
+        return res.status(201).json({msg: "success"});
     })
-    .patch((req, res) => {
-        // TODO: Edit a user 
-        return res.json({status: "pending"});
+    .patch(async (req, res) => {
+        await User.findByIdAndUpdate(req.params.id, { lastName: "Changed" });
+        return res.json({status: "success"});
     })
-    .delete((req, res) => {
-        // TODO: Delete a user 
-        return res.json({status: "pending"});
+    .delete(async(req, res) => {
+        await User.findByIdAndDelete(req.params.id);
+        return res.json({status: "success"});
     })
-
-
-
 
 app.listen(PORT, () => console.log(`Server started at PORT: ${PORT}.`));
